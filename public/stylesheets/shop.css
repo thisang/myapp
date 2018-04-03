@@ -1,0 +1,30 @@
+header{
+  background-color: black;
+  color: bisque;
+  padding: 10px 100px;
+  display: flex;
+}
+header .logo{
+  font-size: 30px;
+  cursor: pointer;
+}
+header .logo span{
+  text-shadow: 3px 3px #bd6500, -3px -3px #218d9e;
+  letter-spacing: 5px;
+}
+header .head-info{
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+header .head-info .loginer {
+  display: inline-block;
+  font-size: 0;
+  cursor: pointer;
+  box-shadow: -4px -4px #218d9e, 4px 4px #bd6500;
+}
+header .head-info img{
+  width: 34px;
+  height: 34px;
+}
