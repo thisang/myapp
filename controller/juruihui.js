@@ -11,6 +11,10 @@ class handleJRH {
     })
     this.pool = pool;
     this.login = this.login.bind(this);
+    this.logout = this.logout.bind(this);
+    // 辅助函数
+    this.setUserOffline = this.setUserOffline.bind(this);
+
     this.createTask = this.createTask.bind(this);
     this.getTaskFromCategory = this.getTaskFromCategory.bind(this);
   }
@@ -29,37 +33,97 @@ class handleJRH {
           })
           return;
         }
+        let loginuser
         connection.query('SELECT * FROM user WHERE username = ?', [loginInfo.username], (err, result) => {
           if (err) {
             res.send({
               err: '查找用户失败'
             })
+            connection.release();            
             return;
           }
           if (result.length === 0) {
             res.send({
               err: '用户不存在'
             })
+            connection.release();
             return;
           }
           if (result[0].password !== loginInfo.password) {
             res.send({
               err: '密码错误'
             })
+            // connection.release();            
             return;
           }
-          res.send({
-            res: 'ok'
-          });
-          connection.release();
+          loginuser = result[0];
+          let exist = false;
+          connection.query('SELECT uid FROM online WHERE uid = ?', [loginuser.uid], (err, result) => {
+            if (result.length > 0) {
+              exist = true;
+            }
+          })
+          if (exist) {
+            connection.query('UPDATE online SET online = 1', (err, result) => {
+              if (err) {
+                console.log(err);
+              }
+              res.send(loginuser);
+              connection.release();
+            })
+          } else {
+            connection.query('INSERT INTO online(uid, username, lastLoginLocation, lastLoginTime, online) VALUES (?, ?, ?, ?, ?)', [1, 'thiasng', '2', '3', 1], (err, result) => {
+              if (err) {
+                console.log('err', err);
+              }
+              res.send(loginuser);
+              connection.release();
+            })
+          }
         })
       }
     })
   }
   // 注销
-  logout(req, res, next) { }
+  logout(req, res, next) {
+    let uid = req.body.uid;
+    try {
+      this.setUserOffline(uid).then(result => {
+        res.send(result);
+      })
+    } catch(err) {
+      res.send({
+        err: '操作失败'
+      })
+    }
+  }
   // 注册
-  signin(req, res, next) { }
+  signin(req, res, next) {}
+  // 设置用户在线
+  setUserOnline () {
+  }
+  // 设置用户离线
+  setUserOffline (uid) {
+    return new Promise((resolve, reject) => {
+      this.pool.getConnection(function (err, connection) {
+        if (err ){
+          console.log(new Error('数据库连接失败'));
+          connection.release();
+        } else {
+          connection.query(`UPDATE online SET online = 0 WHERE uid = ?`, [uid], (err, result) => {
+            if (err) {
+              console.log(new Error('查询失败'));
+              connection.release();
+            } else {
+              console.log('设置用户离线成功');
+              resolve({res: '退出登录成功'});
+              connection.release();
+            }
+          })
+        }
+      })
+    })
+  }
   createTask(req, res, next) {
     this.pool.getConnection(function (err, connection) {
       if (err) {
