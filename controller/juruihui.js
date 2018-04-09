@@ -12,15 +12,11 @@ class handleJRH {
     this.pool = pool;
     this.login = this.login.bind(this);
     this.logout = this.logout.bind(this);
-    // 辅助函数
-    this.setUserOffline = this.setUserOffline.bind(this);
-
-    this.createTask = this.createTask.bind(this);
-    this.getTaskFromCategory = this.getTaskFromCategory.bind(this);
   }
   // 登录
   login(req, res, next) {
-    this.pool.getConnection(function(err, connection) {
+    console.log('this--1', this);
+    this.pool.getConnection((err, connection) => {
       if (err) {
 				res.send({
           err: '数据库连接失败'
@@ -53,33 +49,17 @@ class handleJRH {
             res.send({
               err: '密码错误'
             })
-            // connection.release();            
+            connection.release();            
             return;
           }
           loginuser = result[0];
-          let exist = false;
-          connection.query('SELECT uid FROM online WHERE uid = ?', [loginuser.uid], (err, result) => {
-            if (result.length > 0) {
-              exist = true;
-            }
+          console.log('loginuser', loginuser);
+          this.setUserOnline(loginuser)
+          .then(() => {
+            res.send(loginuser);
+            connection.release();
           })
-          if (exist) {
-            connection.query('UPDATE online SET online = 1', (err, result) => {
-              if (err) {
-                console.log(err);
-              }
-              res.send(loginuser);
-              connection.release();
-            })
-          } else {
-            connection.query('INSERT INTO online(uid, username, lastLoginLocation, lastLoginTime, online) VALUES (?, ?, ?, ?, ?)', [1, 'thiasng', '2', '3', 1], (err, result) => {
-              if (err) {
-                console.log('err', err);
-              }
-              res.send(loginuser);
-              connection.release();
-            })
-          }
+          connection.release();          
         })
       }
     })
@@ -87,36 +67,49 @@ class handleJRH {
   // 注销
   logout(req, res, next) {
     let uid = req.body.uid;
-    try {
-      this.setUserOffline(uid).then(result => {
-        res.send(result);
-      })
-    } catch(err) {
+    this.setOnlineWithValue(uid, 0)
+    .then(() => {
       res.send({
-        err: '操作失败'
+        res: '注销成功'
       })
-    }
+    })
   }
   // 注册
   signin(req, res, next) {}
   // 设置用户在线
-  setUserOnline () {
+  setUserOnline (user) {
+    return this.getOnlineUser(user.uid)
+    .then(onlineInfo => {
+      if (onlineInfo.res.length === 0) {
+        // 用户第一次登录
+        this.addOnlineWithUser(user)
+        .then(() => {
+
+        })
+      } else {
+        // 用户再次登录
+        this.setOnlineWithValue(user.uid, 1)
+        .then(() => {
+
+        })
+      }
+    })
   }
-  // 设置用户离线
-  setUserOffline (uid) {
+  // 在online表中添加在线用户
+  addOnlineWithUser (user) {
     return new Promise((resolve, reject) => {
       this.pool.getConnection(function (err, connection) {
         if (err ){
           console.log(new Error('数据库连接失败'));
           connection.release();
         } else {
-          connection.query(`UPDATE online SET online = 0 WHERE uid = ?`, [uid], (err, result) => {
+          connection.query('INSERT INTO online(uid, username, lastLoginLocation, lastLoginTime, online) VALUES (?, ?, ?, ?, ?)', [user.uid, user.username, user.lastLoginLocation, lastLoginTime, 1], (err, result) => {
             if (err) {
               console.log(new Error('查询失败'));
               connection.release();
             } else {
-              console.log('设置用户离线成功');
-              resolve({res: '退出登录成功'});
+              console.log('online表添加在线用户成功');
+              return result;
               connection.release();
             }
           })
@@ -124,51 +117,48 @@ class handleJRH {
       })
     })
   }
-  createTask(req, res, next) {
-    this.pool.getConnection(function (err, connection) {
-      if (err) {
-        console.log('连接数据库失败', err);
-      } else {
-        let bodyObj = JSON.parse(Object.keys(req.body)[0]);
-        console.log(bodyObj);
-        let obj = {
-          taskname: bodyObj.taskname,
-          category: bodyObj.category,
-          assign: bodyObj.assign,
-          patient: bodyObj.patient,
-          datetime: bodyObj.datetime,
-          file: bodyObj.file,
-          description: bodyObj.description
+  /**
+   * 在online表中设置用户online=vlaue
+   * @param {String} uid 用户uid
+   * @param {Number} value 0 || 1
+   */
+  setOnlineWithValue (uid, value) {
+    return new Promise((resolve, reject) => {
+      this.pool.getConnection(function (err, connection) {
+        if (err ){
+          console.log(new Error('数据库连接失败'));
+          connection.release();
+        } else {
+          connection.query(`UPDATE online SET online = ? WHERE uid = ?`, [value, uid], (err, result) => {
+            if (err) {
+              console.log(new Error('查询失败'));
+              connection.release();
+            } else {
+              console.log('更改用户登录状态成功', value);
+              resolve(result);
+              connection.release();
+            }
+          })
         }
-        connection.query('INSERT INTO task SET ?', obj, function (err, result) {
-          if (err) {
-            console.log(err);
-          } else {
-            console.log('插入数据成功', result);
-            res.send(JSON.stringify({ "res": "ok" }));
-            connection.release();
-          }
-        })
-      }
+      })
     })
   }
-  getTaskFromCategory(req, res, next) {
-    this.pool.getConnection(function (err, connection) {
-      if (err) {
-        console.log('连接数据库失败', err);
-      } else {
-        const category = req.params.category;
-        connection.query('SELECT * FROM task WHERE category = ?', [category], function (err, result) {
+  // 查询online表中是否存在对应用户
+  getOnlineUser (uid) {
+    return new Promise((resolve, reject) => {
+      this.pool.getConnection(function(err, connection) {
+        connection.query('SELECT uid FROM online WHERE uid = ?', [uid], (err, result) => {
           if (err) {
-            console.log('查询失败');
+            console.log(new Error('数据库连接失败'))
+            connection.release();
           } else {
-            console.log('查询任务成功', result);
-            res.send(JSON.stringify(result));
+            console.log('查询online表成功');
+            resolve({res: resolve})
             connection.release();
           }
         })
-      }
-    })
+      })
+    }) 
   }
 }
 
