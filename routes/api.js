@@ -14,5 +14,6 @@ router.get('/getTaskFromCategory/:category', handleTask.getTaskFromCategory)
 // 聚蕊烩
 router.post('/juruihui/login', handleJRH.login)
 router.post('/juruihui/logout', handleJRH.logout)
+router.post('/juruihui/signin', handleJRH.signin)
 
 module.exports = router;
