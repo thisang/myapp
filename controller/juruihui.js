@@ -23,14 +23,15 @@ class handleJRH {
 				})
       } else {
         let loginInfo = req.body;
-        if (!(loginInfo.username && loginInfo.password)) {
+
+        if (!(loginInfo.phone && loginInfo.password)) {
           res.send({
-            err: '缺少username或者password字段'
+            err: '缺少phone或者password字段'
           })
           return;
         }
         let loginuser
-        connection.query('SELECT * FROM user WHERE username = ?', [loginInfo.username], (err, result) => {
+        connection.query('SELECT * FROM user WHERE phone = ?', [loginInfo.phone], (err, result) => {
           if (err) {
             res.send({
               err: '查找用户失败'
@@ -54,12 +55,17 @@ class handleJRH {
           }
           loginuser = result[0];
           console.log('loginuser', loginuser);
-          this.setUserOnline(loginuser)
+          this.setUserOnline(loginuser, loginInfo.city)
           .then(() => {
             res.send(loginuser);
             connection.release();
           })
-          connection.release();          
+          .catch(() => {
+            res.send({
+              err: '登录失败'
+            })
+            connection.release();
+          })         
         })
       }
     })
@@ -139,33 +145,34 @@ class handleJRH {
     })
   }
   // 设置用户在线
-  setUserOnline (user) {
-    return this.getOnlineUser(user.uid)
-    .then(onlineInfo => {
-      if (onlineInfo.res.length === 0) {
-        // 用户第一次登录
-        this.addOnlineWithUser(user)
-        .then(() => {
-
-        })
-      } else {
-        // 用户再次登录
-        this.setOnlineWithValue(user.uid, 1)
-        .then(() => {
-
-        })
-      }
+  setUserOnline (user, city) {
+    return new Promise((resolve, reject) => {
+      this.getOnlineUser(user.uid).then(onlineInfo => {
+        if (onlineInfo.length === 0) {
+          // 用户第一次登录
+          console.log(`${user.username}|${user.uid}首次登录`);
+          this.addOnlineWithUser(user, city).then(() => {
+            resolve();
+          })
+        } else {
+          // 用户再次登录
+          console.log(`${user.username}|${user.uid}再次登录`);
+          this.setOnlineWithValue(user.uid, 1, city, new Date().getTime()).then(() => {
+            resolve();
+          })
+        }
+      })
     })
   }
   // 在online表中添加在线用户
-  addOnlineWithUser (user) {
+  addOnlineWithUser (user, city) {
     return new Promise((resolve, reject) => {
       this.pool.getConnection((err, connection) => {
         if (err ){
           console.log(new Error('数据库连接失败'));
           connection.release();
         } else {
-          connection.query('INSERT INTO online(uid, username, lastLoginLocation, lastLoginTime, online) VALUES (?, ?, ?, ?, ?)', [user.uid, user.username, user.lastLoginLocation, lastLoginTime, 1], (err, result) => {
+          connection.query('INSERT INTO online(uid, username, lastLoginLocation, lastLoginTime, online) VALUES (?, ?, ?, ?, ?)', [user.uid, user.username, city, new Date().getTime(), 1], (err, result) => {
             if (err) {
               console.log(new Error('查询失败'));
               connection.release();
@@ -182,21 +189,33 @@ class handleJRH {
   /**
    * 在online表中设置用户online=vlaue
    * @param {String} uid 用户uid
-   * @param {Number} value 0 || 1
+   * @param {Number} online 0 || 1
+   * @param {String} city 最后登录位置
+   * @param {String} time 最后登录时间
    */
-  setOnlineWithValue (uid, value) {
+  setOnlineWithValue (uid, online, city, time) {
     return new Promise((resolve, reject) => {
       this.pool.getConnection(function (err, connection) {
         if (err ){
           console.log(new Error('数据库连接失败'));
           connection.release();
         } else {
-          connection.query(`UPDATE online SET online = ? WHERE uid = ?`, [value, uid], (err, result) => {
+          let sql, sqlParamArr;
+          if (online) {
+            // online
+            sql = 'UPDATE online SET online = ?, lastLoginTime = ?, lastLoginLocation = ? WHERE uid = ?';
+            sqlParamArr = [online, time, city, uid];
+          } else {
+            // offline
+            sql = 'UPDATE online SET online = ? WHERE uid = ?';
+            sqlParamArr = [online, uid];
+          }
+          connection.query(sql, sqlParamArr, (err, result) => {
             if (err) {
-              console.log(new Error('查询失败'));
+              console.log(new Error('查询失败'), err);
               connection.release();
             } else {
-              console.log('更改用户登录状态成功', value);
+              console.log('更改用户登录状态成功', online);
               resolve(result);
               connection.release();
             }
@@ -209,13 +228,14 @@ class handleJRH {
   getOnlineUser (uid) {
     return new Promise((resolve, reject) => {
       this.pool.getConnection(function(err, connection) {
-        connection.query('SELECT uid FROM online WHERE uid = ?', [uid], (err, result) => {
-          if (err) {
+        connection.query('SELECT uid FROM online WHERE uid = ?', [uid], (error, result) => {
+          if (error) {
             console.log(new Error('数据库连接失败'))
+            reject();
             connection.release();
           } else {
-            console.log('查询online表成功');
-            resolve({res: resolve})
+            console.log('查询online表成功', result);
+            resolve(result)
             connection.release();
           }
         })
