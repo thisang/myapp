@@ -15,5 +15,6 @@ router.get('/getTaskFromCategory/:category', handleTask.getTaskFromCategory)
 router.post('/juruihui/login', handleJRH.login)
 router.post('/juruihui/logout', handleJRH.logout)
 router.post('/juruihui/signin', handleJRH.signin)
+router.get('/juruihui/article', handleJRH.getAritcle)
 
 module.exports = router;

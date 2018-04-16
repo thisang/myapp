@@ -1,4 +1,5 @@
 const mysql = require('mysql')
+const JRH = require('../modules/jrh')
 
 class handleJRH {
   constructor() {
@@ -13,6 +14,20 @@ class handleJRH {
     this.login = this.login.bind(this);
     this.logout = this.logout.bind(this);
     this.signin = this.signin.bind(this);
+  }
+  // 获取文章列表
+  getArtice (req, res, next) {
+    const city = parseInt(req.query.city) || '全国';
+    const start = parseInt(req.query.start) || 0;
+    const size = parseInt(req.query.size) || 20;
+    JRH.getArticleList(city, start, size, (err, data) => {
+      err ? res.status(400).json({err}) : res.json({
+        data: data,
+        start: start,
+        size: size > data.length ? data.length : size,
+        total: data.length
+      })
+    })
   }
   // 登录
   login(req, res, next) {
