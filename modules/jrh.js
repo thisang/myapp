@@ -17,8 +17,9 @@ class JRH {
    */
   static getArticleList (city, start, size, callback) {
     callback = typeof callback !== 'function' ? function () {} : callback;
-    const sql = 'select * from article where city = ? sort by ctime limit ? , ?';
-    mysql.query(sql, [city, start, size], (err, rows) => {
+    const sql = 'select * from article ' + (city === '全国' ? '' : 'where city = ? ') + 'order by ctime limit ? , ?';
+    const paramArr = city === '全国' ? [start, size] : [city, start, size];
+    mysql.query(sql, paramArr, (err, rows) => {
       callback(err, rows);
     })
   }

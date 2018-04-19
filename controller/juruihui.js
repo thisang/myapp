@@ -16,8 +16,8 @@ class handleJRH {
     this.signin = this.signin.bind(this);
   }
   // 获取文章列表
-  getArtice (req, res, next) {
-    const city = parseInt(req.query.city) || '全国';
+  getArticle (req, res, next) {
+    const city = req.query.city || '全国';
     const start = parseInt(req.query.start) || 0;
     const size = parseInt(req.query.size) || 20;
     JRH.getArticleList(city, start, size, (err, data) => {
