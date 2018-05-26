@@ -28,3 +28,38 @@ header .head-info img{
   width: 34px;
   height: 34px;
 }
+header .head-info .login span {
+ cursor: pointer;
+}
+
+
+
+
+/* login-dialog */
+.dialog-login{
+  display: none;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+}
+.dialog-login .login-mask{
+  position: absolute;
+  width: inherit;
+  height: inherit;
+  background: rgba(0,0,0, .5);
+}
+.dialog-login .login-body{
+  background: #ffffff;
+  width: 600px;
+  height: 400px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.dialog-login .login-body h6{
+  margin: 20px 0;
+  padding: 0 15px;
+}
