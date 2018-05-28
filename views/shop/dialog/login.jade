@@ -1,8 +1,14 @@
 .dialog-login
   .login-mask
     .login-body
-      h6 登录
-      input(type="text", name="username")  
-      input(type="password", name="password")  
-      button.btn 登录
+      .logo-text.login-head
+        span 无趣
+      .login-form
+        .input-item
+          span.input-label 用户名
+          input(type="text", name="username" placeholder="请输入用户名")  
+        .input-item
+          span.input-label 密码
+          input(type="password", name="password" placeholder="请输入密码")  
+        button.btn 登录
       .close ×

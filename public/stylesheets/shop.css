@@ -1,14 +1,15 @@
 header{
   background-color: black;
-  color: bisque;
+  /* color: bisque; */
   padding: 10px 100px;
   display: flex;
 }
-header .logo{
+.logo-text{
   font-size: 30px;
-  cursor: pointer;
+  /* cursor: pointer; */
+  color: bisque;  
 }
-header .logo span{
+.logo-text span{
   text-shadow: 3px 3px #bd6500, -3px -3px #218d9e;
   letter-spacing: 5px;
 }
@@ -50,16 +51,60 @@ header .head-info .login span {
   height: inherit;
   background: rgba(0,0,0, .5);
 }
+.dialog-login .login-mask .login-head{
+  display: flex;
+  margin: 20px 0;
+  align-items: center;
+  justify-content: center;
+}
 .dialog-login .login-body{
   background: #ffffff;
-  width: 600px;
+  width: 500px;
   height: 400px;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
-.dialog-login .login-body h6{
-  margin: 20px 0;
-  padding: 0 15px;
+.dialog-login .login-body .close{
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+}
+.dialog-login .login-body .login-form{
+  margin: 10px 0;
+  padding: 0 50px;
+}
+.login-form .input-item{
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+}
+.input-item .input-label{
+  font-size: 16px;
+  color: #999;
+  margin: 5px 0;
+}
+.input-item input{
+  height: 40px;
+  border: 2px solid #218d9e;
+  padding: 0 10px;
+}
+.login-form button.btn{
+  width: 100%;
+  background-color: #218d9e;
+  color: #fff;
+  text-align: center;
+  border: 2px solid #bd6500;
+  height: 42px;
+  font-size: 16px;
+  margin-top: 10px;
+  cursor: pointer;
+}
+.login-form button.btn:hover{
+  background-color: #bd6500;
+  border: 2px solid #218d9e;
 }
