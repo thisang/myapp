@@ -20,7 +20,7 @@ header .head-info{
   align-items: center;
 }
 header .head-info .loginer {
-  display: inline-block;
+  display: none;
   font-size: 0;
   cursor: pointer;
   box-shadow: -4px -4px #218d9e, 4px 4px #bd6500;
@@ -31,6 +31,7 @@ header .head-info img{
 }
 header .head-info .login span {
  cursor: pointer;
+ color: #fff;
 }
 
 
