@@ -13,7 +13,7 @@ class handleBR {
     BR.login(userinfo, (err, data) => {
       if (err) {
         res.status(400).json({err})
-      } else if (data.data.length === 0) {
+      } else if (data.length === 0) {
         res.status(400).json({
           err: '用户名或密码错误'
         })

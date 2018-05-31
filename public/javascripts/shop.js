@@ -8,6 +8,9 @@
 //   console.log(data);
 // })
 
+const COOKIE_USER = 'boring_id';
+const COOKIE_CODE = 'boring_code';
+
 // 设置cookie
 const setCookie = function (cname, cvalue, exdays) {
   let d = new Date();
@@ -15,6 +18,11 @@ const setCookie = function (cname, cvalue, exdays) {
   let expires = "expires="+d.toGMTString();
   document.cookie = cname + "=" + cvalue + "; " + expires;
 }
+
+//清除cookie    
+function clearCookie(name) {    
+  setCookie(name, "", -1);    
+} 
 
 // 获取cookie
 const getCookieFormName = function (cname) {
@@ -32,7 +40,7 @@ const getCookieFormName = function (cname) {
 }
 // 判断是否登录
 const isLogin = function () {
-  let userCookie = getCookieFormName('boring_id');
+  let userCookie = getCookieFormName(COOKIE_USER);
   if (userCookie) {
     return true;
   }
@@ -67,8 +75,8 @@ $('.dialog-login button.btn').click(() => {
       $('header .loginer').show();
 
       // 设置cookie
-      setCookie('boring_id', username);
-      setCookie('boring_code', password);
+      setCookie(COOKIE_USER, username);
+      setCookie(COOKIE_CODE, password);
     })
   } else {
     alert('请填写用户名和密码');
@@ -77,4 +85,11 @@ $('.dialog-login button.btn').click(() => {
 // 关闭登录弹窗
 $('.dialog-login .close').click(() => {
   $('.dialog-login').hide();
+})
+// 退出登录
+$('.loginer li.logout').click(() => {
+  clearCookie(COOKIE_USER);
+  clearCookie(COOKIE_CODE);
+  $('header .login').show();
+  $('header .loginer').hide();
 })
